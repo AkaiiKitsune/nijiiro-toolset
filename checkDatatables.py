@@ -4,12 +4,14 @@ from encryption import decrypt_file
 import json
 import os
 
+from helpers import doesPathExist, findAllObjects, findDoubloninList, findKeyInList
+
 # "japaneseText"
 # "englishUsText"
 # "chineseTText"
 # "koreanText"
 # "chineseSText"
-language = "englishUsText"
+language = "japaneseText"
 
 isCHN = False
 
@@ -80,10 +82,6 @@ except:
     words = None
 # endregion
 
-# Forcing japanese language on 08.18 as this is what is usually used for omnimix.
-if isCHN:
-    language = "japaneseText"
-
 
 # region Classes And Methods
 class Genres(Enum):
@@ -102,44 +100,6 @@ class Genres(Enum):
     @classmethod
     def _missing_(cls, value):
         return cls.Unknown
-
-
-def findKeyInList(list: list, key: str, keyValue, value=None):
-    for object in list:
-        if object[key] == keyValue:
-            if value is not None:
-                return object[value]
-            else:
-                return object
-
-    if value is not None:
-        return ""
-    else:
-        return None
-
-
-def findAllObjects(list: list, key: str, keyValue):
-    templist = []
-    templist.append(list)
-    objects = []
-
-    for element in templist[0]:
-        if element[key] == keyValue:
-            objects.append(element)
-
-    return objects
-
-
-def findDoubloninList(list: list, key: str, keyValue):
-    if len(findAllObjects(list=list, key=key, keyValue=keyValue)) > 1:
-        return True
-    return False
-
-
-def doesPathExist(path: str):
-    if os.path.exists(path):
-        return True
-    return False
 
 
 def initCheckFile():
