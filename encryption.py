@@ -1,5 +1,6 @@
 import gzip
 import os
+from pathlib import Path
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
@@ -56,7 +57,7 @@ def decrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
         decompressed_data = gzip.decompress(unpadded_data)
 
         # return the decompressed data
-        return decompressed_data.decode()
+        return decompressed_data
 
 
 def encrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
@@ -67,8 +68,13 @@ def encrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
     iv = os.urandom(16)
 
     # Create an AES cipher object with CBC mode
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-    encryptor = cipher.encryptor()
+    try:
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+    except Exception as error:
+        print(error)
+        print("You need to set the right AES keys in the encryption.py file")
+        exit(0)
 
     with open(input_file, "rb") as infile:
         # Read the entire file into memory
@@ -85,17 +91,35 @@ def encrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
     return iv + encrypted_data
 
 
+def save_file(file: bytes, outdir: str, encrypt: bool):
+    try:
+        fileContent = (
+            decrypt_file(input_file=file, key_type=type)
+            if not encrypt
+            else encrypt_file(input_file=file, key_type=type)
+        )
+
+        print("Decrypting" if not encrypt else "Encrypting", file, "to", outdir)
+
+        with open(outdir, "wb") as outfile:
+            outfile.write(fileContent)
+    except Exception as error:
+        print(
+            file, "couldn't be", "decrypted :" if not encrypt else "encrypted :", error
+        )
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "-i",
         "--input",
-        help="Input file",
+        help="Input file / folder",
     )
     parser.add_argument(
         "-o",
         "--output",
-        help="Output file",
+        help="Output file / folder",
     )
     parser.add_argument(
         "-e",
@@ -106,9 +130,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-t",
-        "--type",
-        default="Datatable",
-        help="Datatable is default, you can also use Fumen",
+        "--fumen",
+        action="store_true",
+        default=False,
+        help="Datatable is default, use this flag for Fumen",
     )
     args = parser.parse_args()
 
@@ -120,15 +145,28 @@ if __name__ == "__main__":
         print("Missing output file, pass the argument --help for help")
         exit(0)
 
-    type = Keys.Datatable if args.type == "Datatable" else Keys.Fumen
+    type = Keys.Datatable if not args.fumen else Keys.Fumen
 
-    if not args.enc:
-        print("Encrypting " + args.input + " to " + args.output)
-        file = decrypt_file(input_file=args.input, key_type=type)
-        with open(args.output, "w") as outfile:
-            outfile.write(file)
+    if os.path.isdir(args.input):
+        for path, subdirs, files in os.walk(args.input):
+            for name in files:
+                full_path = os.path.join(path, name)
+                relative_path = os.path.relpath(full_path, args.input)
+                outpath = os.path.join(args.output, relative_path)
+                outdir = os.path.dirname(outpath)
+
+                Path(outdir).mkdir(parents=True, exist_ok=True)
+
+                if os.path.isfile(full_path):
+                    save_file(
+                        file=full_path,
+                        outdir=outpath,
+                        encrypt=False if not args.enc else True,
+                    )
+
     else:
-        print("Decrypting " + args.input + " to " + args.output)
-        file = encrypt_file(input_file=args.input, key_type=type)
-        with open(args.output, "wb") as outfile:
-            outfile.write(file)
+        save_file(
+            file=args.input,
+            outdir=args.output,
+            encrypt=False if not args.enc else True,
+        )

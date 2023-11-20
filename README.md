@@ -37,11 +37,17 @@ py encryption.py --help
 # Decrypting a datatable :
 py encryption.py --input "data.bin" --output "data.json"
 
+# Decrypting all datatables :
+py encryption.py --input "./Data/x64/datatable" --output "./decrypted_datatables" 
+
 # Encrypting a datatable :
 py encryption.py --enc --input "data.json" --output "data.bin" 
 
-# Encrypting a fumen for use in CHN :
-py encryption.py --enc --fumen --input "data_e.bin" --output "data_e.bin" 
+# Encrypting all datatables :
+py encryption.py --enc --input "./Data/x64/datatable" --output "./decrypted_datatables" 
+
+# Encrypting a folder of fumens for use in CHN :
+py encryption.py --enc --fumen --input "./08.18/fumen/" --output "./CHN/fumen/" 
 ```
 
 ## sortAlphabetically.py
