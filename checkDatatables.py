@@ -1,8 +1,6 @@
+from argparse import ArgumentParser
 from enum import Enum
-import gzip
-from encryption import decrypt_file
 import json
-import os
 
 from helpers import (
     doesPathExist,
@@ -13,12 +11,29 @@ from helpers import (
     loadFile,
 )
 
-# "japaneseText"
-# "englishUsText"
-# "chineseTText"
-# "koreanText"
-# "chineseSText"
-language = "englishUsText"
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-l",
+        "--language",
+        default="englishUsText",
+        help="This sets the language used for sorting the files. Possible values are : japaneseText, englishUsText, chineseTText, chineseSText and koreanText",
+    )
+
+    args = parser.parse_args()
+    language = args.language
+
+    if language not in [
+        "japaneseText",
+        "englishUsText",
+        "chineseTText",
+        "chineseSText",
+        "koreanText",
+    ]:
+        print(
+            "Invalid language, Possible values are : japaneseText, englishUsText, chineseTText, chineseSText and koreanText"
+        )
+        exit(1)
 
 isChn = isChn()
 
@@ -31,10 +46,6 @@ order = loadFile(path="./Data/x64/datatable/music_order.bin")
 attributes = loadFile(path="./Data/x64/datatable/music_attribute.bin")
 words = loadFile(path="./Data/x64/datatable/wordlist.bin")
 # endregion
-
-# Forcing japanese language on 08.18 as this is what is usually used for omnimix.
-if isCHN:
-    language = "japaneseText"
 
 
 # region Classes And Methods
@@ -56,42 +67,21 @@ class Genres(Enum):
         return cls.Unknown
 
 
-def findKeyInList(list: list, key: str, keyValue, value=None):
-    for object in list:
-        if object[key] == keyValue:
-            if value is not None:
-                return object[value]
-            else:
-                return object
+class Song:
+    id = ""
+    uniqueId = -1
+    genreNo = -1
+    name = ""
+    sub = ""
+    detail = ""
 
-    if value is not None:
-        return ""
-    else:
-        return None
-
-
-def findAllObjects(list: list, key: str, keyValue):
-    templist = []
-    templist.append(list)
-    objects = []
-
-    for element in templist[0]:
-        if element[key] == keyValue:
-            objects.append(element)
-
-    return objects
-
-
-def findDoubloninList(list: list, key: str, keyValue):
-    if len(findAllObjects(list=list, key=key, keyValue=keyValue)) > 1:
-        return True
-    return False
-
-
-def doesPathExist(path: str):
-    if os.path.exists(path):
-        return True
-    return False
+    def __init__(self, id, uniqueId, genreNo, name, sub, detail):
+        self.id = id
+        self.uniqueId = uniqueId
+        self.genreNo = genreNo
+        self.name = name
+        self.sub = sub
+        self.detail = detail
 
 
 def initCheckFile():
@@ -167,23 +157,6 @@ def initCheckFile():
             },
         }
     )
-
-
-class Song:
-    id = ""
-    uniqueId = -1
-    genreNo = -1
-    name = ""
-    sub = ""
-    detail = ""
-
-    def __init__(self, id, uniqueId, genreNo, name, sub, detail):
-        self.id = id
-        self.uniqueId = uniqueId
-        self.genreNo = genreNo
-        self.name = name
-        self.sub = sub
-        self.detail = detail
 
 
 # endregion

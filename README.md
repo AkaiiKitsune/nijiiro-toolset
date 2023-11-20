@@ -70,7 +70,8 @@ py sortAlphabetically.py --restore
 
 ## checkDatatables.py
 
-This script generates a comprehensive list of various informations regarding your database files. It is meant to be used for basic checks such as:
+This script generates a comprehensive list of various informations regarding your database files for a given language.
+It is meant to be used for basic checks such as:
 
 * Listing the amount of songs in your tables
 * Listing all vacant entries bellow 1599 to facilitate adding songs in
@@ -80,8 +81,13 @@ This script generates a comprehensive list of various informations regarding you
 * Checking for id and uniqueId mismatches in various files
 * Checking for missing sound and fumen files
 
+Possible languages are : japaneseText, englishUsText, chineseTText, chineseSText and koreanText.
+
 To run this one you simply need to call it like so:
 
-> py checkDatatables.py
+```py
+# Check datatables 
+py checkDatatables.py --language "englishUsText"
+```
 
 The output will be written in a file named `checks.json`
