@@ -4,83 +4,37 @@ from encryption import decrypt_file
 import json
 import os
 
-from helpers import doesPathExist, findAllObjects, findDoubloninList, findKeyInList
+from helpers import (
+    doesPathExist,
+    findAllObjects,
+    findDoubloninList,
+    findKeyInList,
+    isChn,
+    loadFile,
+)
 
 # "japaneseText"
 # "englishUsText"
 # "chineseTText"
 # "koreanText"
 # "chineseSText"
-language = "japaneseText"
+language = "englishUsText"
 
-isCHN = False
+isChn = isChn()
 
 # region Loading files
 checkFile = {}
 
-# Loading musicinfo.bin
-try:
-    infos = json.load(gzip.open("./Data/x64/datatable/musicinfo.bin", "rb"))["items"]
-except:
-    try:
-        infos = json.loads(
-            decrypt_file(input_file="./Data/x64/datatable/musicinfo.bin")
-        )["items"]
-        isCHN = True
-    except:
-        print("Couldn't load musicinfo.bin, exiting.")
-        exit(0)
-
-# Loading music_usbsetting.bin
-try:
-    usb = (
-        json.loads(
-            decrypt_file(input_file="./Data/x64/datatable/music_usbsetting.bin")
-        )["items"]
-        if isCHN
-        else None
-    )
-except:
-    usb = None
-
-# Loading music_order.bin
-try:
-    order = (
-        json.loads(decrypt_file(input_file="./Data/x64/datatable/music_order.bin"))[
-            "items"
-        ]
-        if isCHN
-        else json.load(gzip.open("./Data/x64/datatable/music_order.bin", "rb"))["items"]
-    )
-except:
-    order = None
-
-# Loading music_attribute.bin
-try:
-    attributes = (
-        json.loads(decrypt_file(input_file="./Data/x64/datatable/music_attribute.bin"))[
-            "items"
-        ]
-        if isCHN
-        else json.load(gzip.open("./Data/x64/datatable/music_attribute.bin", "rb"))[
-            "items"
-        ]
-    )
-except:
-    attributes = None
-
-# Loading wordlist.bin
-try:
-    words = (
-        json.loads(decrypt_file(input_file="./Data/x64/datatable/wordlist.bin"))[
-            "items"
-        ]
-        if isCHN
-        else json.load(gzip.open("./Data/x64/datatable/wordlist.bin", "rb"))["items"]
-    )
-except:
-    words = None
+infos = loadFile(path="./Data/x64/datatable/musicinfo.bin")
+usb = loadFile(path="./Data/x64/datatable/music_usbsetting.bin")
+order = loadFile(path="./Data/x64/datatable/music_order.bin")
+attributes = loadFile(path="./Data/x64/datatable/music_attribute.bin")
+words = loadFile(path="./Data/x64/datatable/wordlist.bin")
 # endregion
+
+# Forcing japanese language on 08.18 as this is what is usually used for omnimix.
+if isCHN:
+    language = "japaneseText"
 
 
 # region Classes And Methods
@@ -92,14 +46,52 @@ class Genres(Enum):
     Vocaloid = 3
     GameMusic = 4
     NamcoOriginal = 5
-    Variety = 6 if not isCHN else 7
-    Classical = 7 if not isCHN else 8
-    if not isCHN:
+    Variety = 6 if not isChn else 7
+    Classical = 7 if not isChn else 8
+    if not isChn:
         Custom = 9
 
     @classmethod
     def _missing_(cls, value):
         return cls.Unknown
+
+
+def findKeyInList(list: list, key: str, keyValue, value=None):
+    for object in list:
+        if object[key] == keyValue:
+            if value is not None:
+                return object[value]
+            else:
+                return object
+
+    if value is not None:
+        return ""
+    else:
+        return None
+
+
+def findAllObjects(list: list, key: str, keyValue):
+    templist = []
+    templist.append(list)
+    objects = []
+
+    for element in templist[0]:
+        if element[key] == keyValue:
+            objects.append(element)
+
+    return objects
+
+
+def findDoubloninList(list: list, key: str, keyValue):
+    if len(findAllObjects(list=list, key=key, keyValue=keyValue)) > 1:
+        return True
+    return False
+
+
+def doesPathExist(path: str):
+    if os.path.exists(path):
+        return True
+    return False
 
 
 def initCheckFile():

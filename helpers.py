@@ -1,4 +1,29 @@
+import gzip
+import json
 import os
+
+from encryption import decrypt_file
+
+
+def isChn():
+    return os.path.exists("./Data/x64/datatable/music_usbsetting.bin")
+
+
+def loadFile(path: str):
+    if doesPathExist(path):
+        try:
+            if not isChn():
+                # Loading files for 08.18
+                return json.load(gzip.open(path, "rb"))["items"]
+            else:
+                # Loading files for 32.09 CHN
+                return json.loads(decrypt_file(input_file=path))["items"]
+        except Exception as error:
+            print(error)
+            print("Couldn't load", path)
+            return None
+    else:
+        print(path, "doesn't exist")
 
 
 def findKeyInList(list: list, key: str, keyValue, value=None):
