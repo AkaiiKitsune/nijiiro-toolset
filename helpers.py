@@ -6,7 +6,20 @@ from encryption import decrypt_file
 
 
 def isChn():
-    return os.path.exists("./Data/x64/datatable/music_usbsetting.bin")
+    try:
+        try:
+            # Trying to load file for 08.18
+            json.load(gzip.open("./Data/x64/datatable/musicinfo.bin", "rb"))["items"]
+            return False
+        except Exception as error:
+            # Trying to load file for 32.09 CHN
+            json.loads(decrypt_file(input_file="./Data/x64/datatable/musicinfo.bin"))[
+                "items"
+            ]
+            return True
+    except Exception as error:
+        print(error)
+        print("Couldn't find musicinfo.bin, assuming 08.18")
 
 
 def loadFile(path: str):

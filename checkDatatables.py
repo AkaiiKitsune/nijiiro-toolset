@@ -57,8 +57,8 @@ class Genres(Enum):
     Vocaloid = 3
     GameMusic = 4
     NamcoOriginal = 5
-    Variety = 6 if not isChn else 7
-    Classical = 7 if not isChn else 8
+    Variety = 6 if isChn else 7
+    Classical = 7 if isChn else 8
     if not isChn:
         Custom = 9
 
@@ -87,7 +87,7 @@ class Song:
 def initCheckFile():
     global checkFile
     checkFile = {
-        "musicinfo.json": {
+        "musicinfo.bin": {
             "TotalEntries": len(infos),
             "MaxId": max(infos, key=lambda ev: ev["uniqueId"])["uniqueId"],
             "UniqueIdTooHigh": 0,
@@ -101,7 +101,7 @@ def initCheckFile():
     }
 
     if attributes is not None:
-        checkFile["music_attribute.json"] = {
+        checkFile["music_attribute.bin"] = {
             "TotalEntries": len(attributes),
             "Missing": 0,
             "MissingList": [],
@@ -112,7 +112,7 @@ def initCheckFile():
         }
 
     if order is not None:
-        checkFile["music_order.json"] = {
+        checkFile["music_order.bin"] = {
             "TotalEntries": len(order),
             "UniqueEntries": 0,
             "UniqueEntriesList": [],
@@ -124,7 +124,7 @@ def initCheckFile():
         }
 
     if usb is not None:
-        checkFile["music_usbsetting.json"] = {
+        checkFile["music_usbsetting.bin"] = {
             "TotalEntries": len(usb),
             "Missing": 0,
             "MissingList": [],
@@ -135,7 +135,7 @@ def initCheckFile():
         }
 
     if words is not None:
-        checkFile["wordlist.json"] = {
+        checkFile["wordlist.bin"] = {
             "TotalEntries": len(words),
             "MissingSongName": 0,
             "MissingSongNameList": [],
@@ -200,12 +200,12 @@ initCheckFile()
 
 # Checking...
 for song in songs:
-    # musicinfo.json
+    # musicinfo.bin
     if infos is not None:
         # Checking for too high of an id
         if song.uniqueId > 1599:
-            checkFile["musicinfo.json"]["UniqueIdTooHigh"] += 1
-            checkFile["musicinfo.json"]["UniqueIdTooHighList"].append(
+            checkFile["musicinfo.bin"]["UniqueIdTooHigh"] += 1
+            checkFile["musicinfo.bin"]["UniqueIdTooHighList"].append(
                 {
                     "id": song.id,
                     "uniqueId": song.uniqueId,
@@ -219,7 +219,7 @@ for song in songs:
         }
         if (
             findKeyInList(
-                list=checkFile["musicinfo.json"]["GenreNoList"],
+                list=checkFile["musicinfo.bin"]["GenreNoList"],
                 key="GenreNo",
                 keyValue=song.genreNo,
             )
@@ -228,31 +228,33 @@ for song in songs:
             genre["NumberofSongs"] = len(
                 findAllObjects(list=infos, key="genreNo", keyValue=song.genreNo)
             )
-            checkFile["musicinfo.json"]["GenreNoList"].append(genre)
+            checkFile["musicinfo.bin"]["GenreNoList"].append(genre)
         # Search doublons
         if findDoubloninList(list=infos, key="id", keyValue=song.id):
-            if song.id not in checkFile["musicinfo.json"]["DoublonsList"]:
-                checkFile["musicinfo.json"]["Doublons"] += 1
-                checkFile["musicinfo.json"]["DoublonsList"].append(song.id)
+            if song.id not in checkFile["musicinfo.bin"]["DoublonsList"]:
+                checkFile["musicinfo.bin"]["Doublons"] += 1
+                checkFile["musicinfo.bin"]["DoublonsList"].append(song.id)
 
-    # music_usbsetting.json
+        if findDoubloninList(list=infos, key="uniqueId", keyValue=song.uniqueId):
+            if song.id not in checkFile["musicinfo.bin"]["DoublonsList"]:
+                checkFile["musicinfo.bin"]["Doublons"] += 1
+                checkFile["musicinfo.bin"]["DoublonsList"].append(song.uniqueId)
+
+    # music_usbsetting.bin
     if usb is not None:
         # Check for missing uniqueIds or id and uniqueId mismatches
         orderOccurences = findAllObjects(list=usb, key="id", keyValue=song.id)
         if len(orderOccurences) == 0:
-            checkFile["music_usbsetting.json"]["Missing"] += 1
-            checkFile["music_usbsetting.json"]["MissingList"].append(song.id)
+            checkFile["music_usbsetting.bin"]["Missing"] += 1
+            checkFile["music_usbsetting.bin"]["MissingList"].append(song.id)
         else:
             for occurence in orderOccurences:
                 if not all(
                     [song.id == occurence["id"], song.uniqueId == occurence["uniqueId"]]
                 ):
-                    if (
-                        song.id
-                        not in checkFile["music_usbsetting.json"]["MismatchList"]
-                    ):
-                        checkFile["music_usbsetting.json"]["Mismatch"] += 1
-                        checkFile["music_usbsetting.json"]["MismatchList"].append(
+                    if song.id not in checkFile["music_usbsetting.bin"]["MismatchList"]:
+                        checkFile["music_usbsetting.bin"]["Mismatch"] += 1
+                        checkFile["music_usbsetting.bin"]["MismatchList"].append(
                             {
                                 "id": song.id,
                                 "ExpectedUniqueId": song.uniqueId,
@@ -262,25 +264,29 @@ for song in songs:
 
         # Search doublons
         if findDoubloninList(list=usb, key="id", keyValue=song.id):
-            if song.id not in checkFile["music_usbsetting.json"]["DoublonsList"]:
-                checkFile["music_usbsetting.json"]["Doublons"] += 1
-                checkFile["music_usbsetting.json"]["DoublonsList"].append(song.id)
+            if song.id not in checkFile["music_usbsetting.bin"]["DoublonsList"]:
+                checkFile["music_usbsetting.bin"]["Doublons"] += 1
+                checkFile["music_usbsetting.bin"]["DoublonsList"].append(song.id)
+        if findDoubloninList(list=usb, key="uniqueId", keyValue=song.uniqueId):
+            if song.id not in checkFile["musicinfo.bin"]["DoublonsList"]:
+                checkFile["music_usbsetting.bin"]["Doublons"] += 1
+                checkFile["music_usbsetting.bin"]["DoublonsList"].append(song.uniqueId)
 
-    # music_attribute.json
+    # music_attribute.bin
     if attributes is not None:
         # Check for missing uniqueIds or id and uniqueId mismatches
         orderOccurences = findAllObjects(list=attributes, key="id", keyValue=song.id)
         if len(orderOccurences) == 0:
-            checkFile["music_attribute.json"]["Missing"] += 1
-            checkFile["music_attribute.json"]["MissingList"].append(song.id)
+            checkFile["music_attribute.bin"]["Missing"] += 1
+            checkFile["music_attribute.bin"]["MissingList"].append(song.id)
         else:
             for occurence in orderOccurences:
                 if not all(
                     [song.id == occurence["id"], song.uniqueId == occurence["uniqueId"]]
                 ):
-                    if song.id not in checkFile["music_attribute.json"]["MismatchList"]:
-                        checkFile["music_attribute.json"]["Mismatch"] += 1
-                        checkFile["music_attribute.json"]["MismatchList"].append(
+                    if song.id not in checkFile["music_attribute.bin"]["MismatchList"]:
+                        checkFile["music_attribute.bin"]["Mismatch"] += 1
+                        checkFile["music_attribute.bin"]["MismatchList"].append(
                             {
                                 "id": song.id,
                                 "ExpectedUniqueId": song.uniqueId,
@@ -288,17 +294,21 @@ for song in songs:
                             }
                         )
         if findDoubloninList(list=attributes, key="id", keyValue=song.id):
-            if song.id not in checkFile["music_attribute.json"]["DoublonsList"]:
-                checkFile["music_attribute.json"]["Doublons"] += 1
-                checkFile["music_attribute.json"]["DoublonsList"].append(song.id)
+            if song.id not in checkFile["music_attribute.bin"]["DoublonsList"]:
+                checkFile["music_attribute.bin"]["Doublons"] += 1
+                checkFile["music_attribute.bin"]["DoublonsList"].append(song.id)
+        if findDoubloninList(list=attributes, key="uniqueId", keyValue=song.uniqueId):
+            if song.id not in checkFile["musicinfo.bin"]["DoublonsList"]:
+                checkFile["music_attribute.bin"]["Doublons"] += 1
+                checkFile["music_attribute.bin"]["DoublonsList"].append(song.uniqueId)
 
-    # music_order.json
+    # music_order.bin
     if order is not None:
         # Check for missing uniqueIds or id and uniqueId mismatches
         orderOccurences = findAllObjects(list=order, key="id", keyValue=song.id)
         if len(orderOccurences) == 0:
-            checkFile["music_order.json"]["Missing"] += 1
-            checkFile["music_order.json"]["MissingList"].append(song.id)
+            checkFile["music_order.bin"]["Missing"] += 1
+            checkFile["music_order.bin"]["MissingList"].append(song.id)
         else:
             songGenres = []
             for occurence in orderOccurences:
@@ -306,9 +316,9 @@ for song in songs:
                 if not all(
                     [song.id == occurence["id"], song.uniqueId == occurence["uniqueId"]]
                 ):
-                    if song.id not in checkFile["music_order.json"]["MismatchList"]:
-                        checkFile["music_order.json"]["Mismatch"] += 1
-                        checkFile["music_order.json"]["MismatchList"].append(
+                    if song.id not in checkFile["music_order.bin"]["MismatchList"]:
+                        checkFile["music_order.bin"]["Mismatch"] += 1
+                        checkFile["music_order.bin"]["MismatchList"].append(
                             {
                                 "id": song.id,
                                 "ExpectedUniqueId": song.uniqueId,
@@ -317,24 +327,24 @@ for song in songs:
                         )
 
             # Counting unique entries
-            checkFile["music_order.json"]["UniqueEntries"] += 1
-            checkFile["music_order.json"]["UniqueEntriesList"].append(
+            checkFile["music_order.bin"]["UniqueEntries"] += 1
+            checkFile["music_order.bin"]["UniqueEntriesList"].append(
                 {
                     song.id: songGenres,
                 }
             )
 
-    # wordlist.json
+    # wordlist.bin
     if words is not None:
         if song.name == "":
-            checkFile["wordlist.json"]["MissingSongName"] += 1
-            checkFile["wordlist.json"]["MissingSongNameList"].append(song.id)
+            checkFile["wordlist.bin"]["MissingSongName"] += 1
+            checkFile["wordlist.bin"]["MissingSongNameList"].append(song.id)
         if song.sub == "":
-            checkFile["wordlist.json"]["MissingSongSub"] += 1
-            checkFile["wordlist.json"]["MissingSongSubList"].append(song.id)
+            checkFile["wordlist.bin"]["MissingSongSub"] += 1
+            checkFile["wordlist.bin"]["MissingSongSubList"].append(song.id)
         if song.detail == "":
-            checkFile["wordlist.json"]["MissingSongDetail"] += 1
-            checkFile["wordlist.json"]["MissingSongDetailList"].append(song.id)
+            checkFile["wordlist.bin"]["MissingSongDetail"] += 1
+            checkFile["wordlist.bin"]["MissingSongDetailList"].append(song.id)
 
     # Gamefiles
     if not doesPathExist("./Data/x64/sound/" + "song_" + song.id + ".nus3bank"):
@@ -345,11 +355,11 @@ for song in songs:
         checkFile["GameFiles"]["MissingFumenList"].append(song.id)
 
 # Checking for vacant uniqueIds
-for i in range(max(checkFile["musicinfo.json"]["MaxId"], 1600)):
+for i in range(max(checkFile["musicinfo.bin"]["MaxId"], 1600)):
     key = findKeyInList(list=infos, key="uniqueId", keyValue=i)
 
     if key is not None:
-        # Updating GenreNoList of music_order.json
+        # Updating GenreNoList of music_order.bin
         for song in findAllObjects(
             list=order, key="uniqueId", keyValue=key["uniqueId"]
         ):
@@ -360,7 +370,7 @@ for i in range(max(checkFile["musicinfo.json"]["MaxId"], 1600)):
             }
             if (
                 findKeyInList(
-                    list=checkFile["music_order.json"]["GenreNoList"],
+                    list=checkFile["music_order.bin"]["GenreNoList"],
                     key="GenreNo",
                     keyValue=song["genreNo"],
                 )
@@ -369,26 +379,26 @@ for i in range(max(checkFile["musicinfo.json"]["MaxId"], 1600)):
                 genre["NumberofSongs"] = len(
                     findAllObjects(list=order, key="genreNo", keyValue=song["genreNo"])
                 )
-                checkFile["music_order.json"]["GenreNoList"].append(genre)
+                checkFile["music_order.bin"]["GenreNoList"].append(genre)
     else:
         # Finding unused Ids bellow 1599
         if i < 1600:
-            checkFile["musicinfo.json"]["UnusedUniqueIds"] += 1
-            checkFile["musicinfo.json"]["UnusedUniqueIdsList"].append(i)
+            checkFile["musicinfo.bin"]["UnusedUniqueIds"] += 1
+            checkFile["musicinfo.bin"]["UnusedUniqueIdsList"].append(i)
 
 # Checking for doublons in wordlist
 if words is not None:
     for word in words:
         if findDoubloninList(list=words, key="key", keyValue=word["key"]):
-            if word["key"] not in checkFile["wordlist.json"]["DoublonsList"]:
-                checkFile["wordlist.json"]["Doublons"] += 1
-                checkFile["wordlist.json"]["DoublonsList"].append(word["key"])
+            if word["key"] not in checkFile["wordlist.bin"]["DoublonsList"]:
+                checkFile["wordlist.bin"]["Doublons"] += 1
+                checkFile["wordlist.bin"]["DoublonsList"].append(word["key"])
 
 # Sorting some values for better readability
-checkFile["musicinfo.json"]["GenreNoList"].sort(
+checkFile["musicinfo.bin"]["GenreNoList"].sort(
     key=lambda x: x["GenreNo"], reverse=False
 )
-checkFile["music_order.json"]["GenreNoList"].sort(
+checkFile["music_order.bin"]["GenreNoList"].sort(
     key=lambda x: x["GenreNo"], reverse=False
 )
 

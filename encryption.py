@@ -1,4 +1,5 @@
 import gzip
+import json
 import os
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -39,9 +40,14 @@ def decrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
     # Read the IV from the first 16 bytes of the input file
     iv = read_iv_from_file(input_file)
 
-    # Create an AES cipher object with CBC mode
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-    decryptor = cipher.decryptor()
+    try:
+        # Create an AES cipher object with CBC mode
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+    except Exception as error:
+        print(error)
+        print("You need to set the right AES keys in the encryption.py file")
+        exit(0)
 
     with open(input_file, "rb") as infile:
         # Skip the IV in the input file
@@ -58,6 +64,14 @@ def decrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
 
         # return the decompressed data
         return decompressed_data
+
+
+def isJson(file: bytes):
+    try:
+        json.loads(file)["items"]
+        return True
+    except:
+        return False
 
 
 def encrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
@@ -98,6 +112,13 @@ def save_file(file: bytes, outdir: str, encrypt: bool):
             if not encrypt
             else encrypt_file(input_file=file, key_type=type)
         )
+
+        if isJson(fileContent):
+            base = os.path.splitext(outdir)[0]
+            outdir = base + ".json"
+        else:
+            base = os.path.splitext(outdir)[0]
+            outdir = base + ".bin"
 
         print("Decrypting" if not encrypt else "Encrypting", file, "to", outdir)
 

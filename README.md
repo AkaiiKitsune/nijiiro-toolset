@@ -76,8 +76,8 @@ It is meant to be used for basic checks such as:
 * Listing the amount of songs in your tables
 * Listing all vacant entries bellow 1599 to facilitate adding songs in
 * Checking their uniqueIds to make sure they don't exceed 1599
-* Listing all missing word entries for your songlist
-* Checking for doublons in various files
+* Listing all missing word entries from your song list
+* Checking for id and uniqueId doublons in various files
 * Checking for id and uniqueId mismatches in various files
 * Checking for missing sound and fumen files
 
