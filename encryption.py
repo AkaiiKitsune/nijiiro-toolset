@@ -68,7 +68,7 @@ def decrypt_file(input_file, key_type: Keys = Keys(Keys.Datatable)):
 
 def isJson(file: bytes):
     try:
-        json.loads(file)["items"]
+        json.loads(file)
         return True
     except:
         return False

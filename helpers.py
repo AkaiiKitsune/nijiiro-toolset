@@ -27,10 +27,14 @@ def loadFile(path: str):
         try:
             if not isChn():
                 # Loading files for 08.18
-                return json.load(gzip.open(path, "rb"))["items"]
+                file = json.load(gzip.open(path, "rb"))["items"]
+                print("Successfully loaded", path)
+                return file
             else:
                 # Loading files for 32.09 CHN
-                return json.loads(decrypt_file(input_file=path))["items"]
+                file = json.loads(decrypt_file(input_file=path))["items"]
+                print("Successfully loaded", path)
+                return file
         except Exception as error:
             print(error)
             print("Couldn't load", path)
@@ -40,22 +44,25 @@ def loadFile(path: str):
 
 
 def findKeyInList(list: list, key: str, keyValue, value=None):
-    for object in list:
-        try:
-            if object[key] == keyValue:
+    try:
+        for object in list:
+            try:
+                if object[key] == keyValue:
+                    if value is not None:
+                        return object[value]
+                    else:
+                        return object
+            except:
                 if value is not None:
-                    return object[value]
-                else:
-                    return object
-        except:
-            if value is not None:
-                print(
-                    value
-                    + " doesn't exist in "
-                    + str(object)
-                    + ", are you using the right language ?"
-                )
-            exit(0)
+                    print(
+                        value
+                        + " doesn't exist in "
+                        + str(object)
+                        + ", are you using the right language ?"
+                    )
+                exit(0)
+    except Exception as error:
+        return None
 
     if value is not None:
         return ""
