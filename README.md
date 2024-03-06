@@ -11,13 +11,14 @@
  extract here <----
  ```
 
-Please note that this works both on 08.18 and CHN.
+Please note that this works on 08.18, 39.06 and CHN.
 
 ## encryption.py
 
-This script allows you to encrypt or decrypt both Datatables and Fumens
+This script allows you to encrypt or decrypt both Datatables and Fumens from 39.06 and CHN.
 
-**You will need to provide your own aes keys for this script to work.**
+**You will need to provide your own aes keys for this script to work**  
+(they are the same for any known dumps that have encrypted files so far).
 
 ```py
 class Keys(Enum):
@@ -46,7 +47,7 @@ py encryption.py --enc --input "data.json" --output "data.bin"
 # Encrypting all datatables :
 py encryption.py --enc --input "./Data/x64/datatable" --output "./decrypted_datatables" 
 
-# Encrypting a folder of fumens for use in CHN :
+# Encrypting a folder of fumens for use in CHN/39.06 :
 py encryption.py --enc --fumen --input "./08.18/fumen/" --output "./CHN/fumen/" 
 ```
 
